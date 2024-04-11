@@ -45,7 +45,7 @@ export default function Summarize({ context }) {
     <div>
       <Dialog>
         <DialogTrigger asChild>
-          <Button size="sm" className="mt-4" onClick={summarizeContext}>
+          <Button size="sm" onClick={summarizeContext}>
             Summarize
           </Button>
         </DialogTrigger>

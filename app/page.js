@@ -5,8 +5,7 @@ import Audio from "@/components/Audio";
 import IntroSection from "@/components/IntroSection";
 import Summarize from "@/components/Summarize";
 import { Button } from "@/components/ui/button";
-import { workerUrl } from "@/lib/config";
-import { formatAudio } from "@/lib/helpers";
+import { formatAudio, formatDate, getTranscript } from "@/lib/helpers";
 import { Disc, Mic } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
@@ -24,7 +23,6 @@ export default function Home() {
 
   useEffect(() => {
     const getLocalData = localStorage.getItem("VoiceJournal");
-
     if (getLocalData) {
       setNotes(JSON.parse(getLocalData));
     }
@@ -51,8 +49,6 @@ export default function Home() {
     if (notesCount > 4) {
       toast.success("You have reached the limit");
       return;
-    } else {
-      setNotesCount((prev) => prev + 1);
     }
 
     try {
@@ -61,7 +57,8 @@ export default function Home() {
         video: false,
       });
       setIsRecording(true);
-      setSeconds(0);
+      setSeconds(1);
+      setNotesCount((prev) => prev + 1);
 
       mediaStream.current = stream;
       mediaRecorder.current = new MediaRecorder(stream);
@@ -78,14 +75,19 @@ export default function Home() {
           type: "audio/webm",
         });
 
-        // const url = URL.createObjectURL(recordedBlob);
-        // setRecordedUrl(url);
-
         chunks.current = [];
+        let transcript;
 
         try {
-          const transcript = await getTranscript(recordedBlob);
+          transcript = await getTranscript(recordedBlob);
+        } catch (error) {
+          toast.error("Error while converting audio to transcript");
+          console.error(error.message);
+          setIsProcessing(false);
+          return;
+        }
 
+        try {
           const arrayBuff = await recordedBlob.arrayBuffer();
           const base64String = btoa(
             String.fromCharCode.apply(null, new Uint8Array(arrayBuff))
@@ -93,14 +95,25 @@ export default function Home() {
 
           setNotes([
             {
+              id: crypto.randomUUID().toString(),
               audio: base64String,
               transcript: transcript.response.text,
+              date: new Date(),
             },
             ...notes,
           ]);
         } catch (error) {
           console.error(error.message);
-          toast.error("Something went wrong");
+          toast.error("Error while getting audio");
+          setNotes([
+            {
+              id: crypto.randomUUID().toString(),
+              audio: false,
+              transcript: transcript.response.text,
+              date: new Date(),
+            },
+            ...notes,
+          ]);
         }
 
         setIsProcessing(false);
@@ -127,20 +140,14 @@ export default function Home() {
     setIsRecording(false);
   };
 
-  const getTranscript = async (audioBlob) => {
-    const res = await fetch(workerUrl.synthesize, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/octet-stream",
-      },
-      body: audioBlob,
-    });
-    const data = await res.json();
-    return data;
+  const deleteNote = (Id) => {
+    const updatedNotes = notes.filter((note) => note.id !== Id);
+    setNotes(updatedNotes);
+    setNotesCount((prev) => prev - 1);
   };
 
   return (
-    <main className="mt-10 flex min-h-screen flex-col items-center justify-between">
+    <main className="mt-6 flex min-h-screen flex-col items-center justify-between">
       <section className="fixed bottom-10 bg-white border border-slate-200 rounded-2xl px-10 py-3 space-x-4 shadow-lg z-10">
         {isRecording ? (
           <div className="flex justify-between items-center gap-10">
@@ -164,29 +171,45 @@ export default function Home() {
             </Button>
           </div>
         ) : (
-          <>
+          <div className="flex flex-col gap-4 justify-center sm:flex-row">
             <Button size="lg" className="rounded-xl" onClick={startRecording}>
               <Disc className="mr-2 h-4 w-4" />
               Record a note
             </Button>
 
             <AskAI />
-          </>
+          </div>
         )}
       </section>
 
-      <section className="max-w-3xl mx-auto p-4">
+      <section className="max-w-3xl mx-auto px-6">
         <div>
           <ul className="flex flex-col gap-10">
-            <li>{isProcessing && <p>Generating response...</p>}</li>
+            <li>
+              {isProcessing && (
+                <p className="animate-pulse">Generating response...</p>
+              )}
+            </li>
             {notes.map((note, i) => (
               <li key={i}>
                 <div className="flex flex-col">
                   <div className="flex gap-4">
-                    <Audio audio={formatAudio(note.audio)} />
+                    {note.audio && <Audio audio={formatAudio(note.audio)} />}
                     <p>{note.transcript}</p>
                   </div>
-                  <Summarize context={note.transcript} />
+                  <p className="mt-2 text-sm text-gray-600">
+                    {formatDate(note.date)}
+                  </p>
+                  <div className="mt-4 flex items-center gap-4">
+                    <Summarize context={note.transcript} />
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => deleteNote(note.id)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               </li>
             ))}
