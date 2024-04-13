@@ -6,6 +6,7 @@ import IntroSection from "@/components/IntroSection";
 import Summarize from "@/components/Summarize";
 import { Button } from "@/components/ui/button";
 import { formatAudio, formatDate, getTranscript } from "@/lib/helpers";
+import { encode } from "base64-arraybuffer";
 import { Disc, Mic } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
@@ -89,9 +90,7 @@ export default function Home() {
 
         try {
           const arrayBuff = await recordedBlob.arrayBuffer();
-          const base64String = btoa(
-            String.fromCharCode.apply(null, new Uint8Array(arrayBuff))
-          );
+          const base64String = encode(arrayBuff);
 
           setNotes([
             {
