@@ -8,7 +8,7 @@ const app = new Hono();
 app.use(
 	'/*',
 	cors({
-		origin: ['https://master.voicejournal.pages.dev', 'https://voicejournal.pages.dev'],
+		origin: ['https://voicejournal.pages.dev'],
 		allowMethods: ['POST', 'GET', 'OPTIONS'],
 	})
 );
@@ -24,9 +24,8 @@ app.post('/generate-text', async (c) => {
 
 	const ai = new Ai(c.env.AI);
 
-	const sideNote = '. keep the response short and concise. maximum length of response must not go over 500 characters.';
 	const answer = await ai.run('@cf/qwen/qwen1.5-0.5b-chat', {
-		prompt: content + sideNote,
+		prompt: content,
 		max_tokens: 256,
 	});
 
@@ -57,7 +56,6 @@ app.post('/synthesize', async (c) => {
 	};
 
 	const response = await ai.run('@cf/openai/whisper', input);
-	console.log(response);
 
 	return c.json({ input: { audio: [] }, response });
 });
