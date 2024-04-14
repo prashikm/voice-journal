@@ -7,7 +7,7 @@ The AI Workers are located at: [worker](./worker)
 
 ## Demo
 
-[⭐ Check it out here!](https://voicejournal.pages.dev/)
+[⭐ Check out live demo here!](https://voicejournal.pages.dev/)
 
 ![voice-journal](./voicejournal-screenshot.png)
 
