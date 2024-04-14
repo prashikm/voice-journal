@@ -17,15 +17,26 @@ app.get('/', async (c) => {
 	return c.text('VoiceJournal');
 });
 
-app.post('/generate-text', async (c) => {
-	const { content } = await c.req.json();
+app.post('/ask-ai', async (c) => {
+	const { content, query } = await c.req.json();
 
-	if (!content || content.length > 128) throw new HTTPException(400, { message: 'Invalid prompt length' });
+	if (!query || query.length > 128) throw new HTTPException(400, { message: 'Invalid prompt length' });
 
 	const ai = new Ai(c.env.AI);
 
-	const answer = await ai.run('@cf/qwen/qwen1.5-0.5b-chat', {
-		prompt: content,
+	const answer = await ai.run('@cf/mistral/mistral-7b-instruct-v0.1', {
+		messages: [
+			{
+				role: 'system',
+				content: `You are a helpful assistant. I will provide you with notes data what has format like "date: actual-note". You will respond or answer the question while keeping context of the notes data provided, also do not include note-number in response. If multiple notes have same date then also count them distinctively.`,
+			},
+			...content,
+			{
+				role: 'user',
+				content: 'At this point I have provided you the required notes data',
+			},
+			{ role: 'user', content: query },
+		],
 		max_tokens: 256,
 	});
 

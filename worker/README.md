@@ -8,7 +8,7 @@ This AI worker uses three models:
 
 1. Automatic Speech Recognition: [whisper](https://developers.cloudflare.com/workers-ai/models/whisper/)
 2. Summarization: [bart-large-cnn](https://developers.cloudflare.com/workers-ai/models/bart-large-cnn/)
-3. Text Generation: [qwen1.5-0.5b-chat](https://developers.cloudflare.com/workers-ai/models/qwen1.5-0.5b-chat/)
+3. Text Generation: [mistral-7b-instruct-v0.1](https://developers.cloudflare.com/workers-ai/models/mistral-7b-instruct-v0.1-awq/)
 
 ## Installation Instructions
 
