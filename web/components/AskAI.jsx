@@ -13,8 +13,9 @@ import { useState } from "react";
 import { CircleDashed, CircleArrowUp } from "lucide-react";
 import toast from "react-hot-toast";
 import { workerUrl } from "@/lib/config";
+import { formatNotesStructure } from "@/lib/helpers";
 
-export default function AskAI() {
+export default function AskAI({ notes }) {
   const [query, setQuery] = useState("");
   const [text, setText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -31,14 +32,15 @@ export default function AskAI() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          content: query,
+          content: formatNotesStructure(notes),
+          query: query,
         }),
       });
       const data = await res.json();
       setText(data.response);
     } catch (error) {
       console.error(error.message);
-      toast.error("Interval error");
+      toast.error("Internal error");
     }
 
     setIsLoading(false);

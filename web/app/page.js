@@ -176,7 +176,7 @@ export default function Home() {
               Record a note
             </Button>
 
-            <AskAI />
+            <AskAI notes={notes} />
           </div>
         )}
       </section>
